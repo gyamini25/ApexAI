@@ -51,6 +51,8 @@ shows what an **AI teammate** on the pit wall looks like.
 | 🧠 **AI Strategy Engine** | Every call ships with **WHAT · WHY · CONFIDENCE · IMPACT**. Reads telemetry, tyres, weather, competitors and track position. |
 | 🔮 **What-If Simulator** | "What happens if we pit now?" → ranked scenario cards with finish position, confidence and delta-to-current. |
 | 📻 **AI Race Engineer Chat** | Radio-style engineer conversation, not a chatbot. *"You're losing 0.4s in Sector 2 — front tyre 8°C below optimum."* |
+| 🎙️ **Voice radio** | Speak to the engineer and **hear Granite reply aloud** (Web Speech API) — an AI teammate, not a text box. |
+| 📡 **Live race mode** | Hit *Go Live* and the race ticks forward — lap counter, sweeping gauges, depleting tyres, streaming telemetry. |
 | 📈 **Tyre Degradation Prediction** | Per-corner degradation curves with the cliff and the recommended pit window. |
 | 📂 **Document Intelligence** | Upload race reports / regulations → Docling extraction → Granite answers *"what strategy worked?"* |
 | 📊 **Telemetry Upload** | Drop a CSV → instant trace charts + Granite analysis. |

@@ -48,7 +48,18 @@ watsonx text-generation endpoint (`/ml/v1/text/generation`).
 | POST | `/api/chat` | `{ question, race, history }` | `{ message }` |
 | POST | `/api/simulate` | `{ question, race }` | `{ scenarios, narrative }` |
 | POST | `/api/documents/ask` | `{ docName, question, text }` | `{ answer }` |
+| POST | `/api/documents/extract` | multipart `file` | `{ docName, text, method, chars }` |
 | POST | `/api/telemetry/parse` | `{ csv }` | `{ rows, columns, insight }` |
+
+### Document extraction (Docling)
+Uploads are extracted by `backend/src/docparse.ts`: **Docling** (structured Markdown) when enabled,
+falling back to **pdf-parse** for PDFs, then plain text — so it always works. To use real Docling:
+```bash
+pip install docling
+# then in backend/.env:
+USE_DOCLING=1
+```
+The Docling step is `ai/docling/extract.py`.
 
 ## Troubleshooting
 - **Header stuck on `sim`** → creds missing/typo'd; check the backend boot log.

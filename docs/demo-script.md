@@ -19,10 +19,14 @@ red **AI Strategy Call** card — *"Pit stop recommended in next 3 laps."*
 Read the card aloud: it shows **WHAT** (pit in 3 laps), **WHY** (4 bullet reasons),
 **CONFIDENCE** (84%), **EXPECTED RESULT** (P3 → P1 +18%). "No black box — every call shows its reasoning."
 
-**0:30 — The engineer talks back.**
-On the right panel, click **"Why am I losing time?"**
-> ApexAI: *"You're losing 0.4s in Sector 2 — front-left tyre 8°C below optimum…"*
-"That's an engineer conversation, not a chatbot."
+**0:30 — Go Live (the wow moment).**
+Hit **Go Live** in the command bar. The lap counter ticks, gauges sweep, tyre bars deplete,
+telemetry streams. "This is live race state — not a mockup."
+
+**0:38 — Talk to your engineer (voice).**
+Tap the **mic** and *say*: "Why am I losing time?" — then **listen**: Granite's reply is spoken
+back over the radio. *"You're losing 0.4s in Sector 2 — front-left tyre 8°C below optimum…"*
+"That's an AI teammate on the pit wall — you talk to it, it talks back."
 
 **0:45 — What-if.**
 Go to **What-If**. Click *"What happens if we pit now?"* → three ranked scenario cards appear
@@ -32,9 +36,10 @@ Go to **What-If**. Click *"What happens if we pit now?"* → three ranked scenar
 Go to **Telemetry**, drag in `sample-telemetry.csv`. Charts redraw, Granite returns an insight.
 "Drop in raw data, get analysis instantly."
 
-**1:15 — Document intelligence.**
-Go to **Intel**. With the 2025 Monaco report selected, click *"What strategy worked at Monaco?"*
-> Docling-extracted knowledge → Granite answers with the undercut insight.
+**1:15 — Document intelligence (real extraction).**
+Go to **Intel**. **Drag in a real PDF** race report — watch it extract (Docling → pdf-parse), then
+ask *"What strategy worked at Monaco?"*
+> Real extracted text → Granite answers with the undercut insight, grounded in the document.
 
 **1:30 — Close.**
 > "ApexAI is an autonomous race engineer that turns millions of racing data points into decisions
