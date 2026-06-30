@@ -4,9 +4,10 @@ import {
   Activity,
   FlaskConical,
   FileText,
-  Radio,
   Cloud,
   Cpu,
+  Play,
+  Pause,
 } from 'lucide-react'
 import type { RaceState } from '../lib/types'
 
@@ -25,11 +26,15 @@ export function CommandBar({
   onScreen,
   race,
   graniteOnline,
+  running,
+  onToggleLive,
 }: {
   screen: Screen
   onScreen: (s: Screen) => void
   race: RaceState
   graniteOnline: boolean
+  running: boolean
+  onToggleLive: () => void
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-pit-line bg-pit-bg/85 backdrop-blur-xl">
@@ -108,10 +113,19 @@ export function CommandBar({
             </button>
           )
         })}
-        <div className="ml-auto flex items-center gap-2 pr-2 text-pit-muted">
-          <Radio className="h-3.5 w-3.5 text-pit-green" />
-          <span className="text-[11px] font-medium">Telemetry stream connected</span>
-        </div>
+        <button
+          onClick={onToggleLive}
+          className={`ml-auto flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
+            running
+              ? 'border-pit-green/40 bg-pit-green/10 text-pit-green'
+              : 'border-pit-red/40 bg-pit-red/10 text-pit-red hover:bg-pit-red/20'
+          }`}
+          title={running ? 'Pause the live race feed' : 'Start the live race feed'}
+        >
+          {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          {running ? 'Race Live' : 'Go Live'}
+          {running && <span className="h-2 w-2 rounded-full bg-pit-green live-dot" />}
+        </button>
       </nav>
     </header>
   )

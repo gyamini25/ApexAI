@@ -1,9 +1,11 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import multer from 'multer'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { graniteInfo } from './granite.js'
+import { extractDocument } from './docparse.js'
 import {
   strategy,
   chat,
@@ -50,6 +52,18 @@ app.post('/api/documents/ask', async (req, res) => {
   try {
     const { docName, question, text } = req.body
     res.json(await documentAsk(docName, question, text))
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message })
+  }
+})
+
+// Real document extraction (Docling → pdf-parse → plain text) for upload.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } })
+app.post('/api/documents/extract', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'no file' })
+    const result = await extractDocument(req.file.buffer, req.file.originalname)
+    res.json({ docName: req.file.originalname, ...result })
   } catch (e) {
     res.status(500).json({ error: (e as Error).message })
   }

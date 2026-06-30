@@ -6,11 +6,13 @@ import { Telemetry } from './components/Telemetry'
 import { Simulation } from './components/Simulation'
 import { Documents } from './components/Documents'
 import { raceState } from './lib/mockData'
+import { useLiveRace } from './lib/useLiveRace'
 import { api } from './lib/api'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('dashboard')
   const [graniteOnline, setGraniteOnline] = useState(false)
+  const live = useLiveRace(raceState)
 
   useEffect(() => {
     api.health().then((h) => setGraniteOnline(Boolean(h.granite)))
@@ -21,14 +23,16 @@ export default function App() {
       <CommandBar
         screen={screen}
         onScreen={setScreen}
-        race={raceState}
+        race={live.race}
         graniteOnline={graniteOnline}
+        running={live.running}
+        onToggleLive={live.toggle}
       />
       <main className="mx-auto max-w-[1600px] px-4 py-4">
-        {screen === 'dashboard' && <Dashboard race={raceState} />}
-        {screen === 'strategy' && <Strategy race={raceState} />}
+        {screen === 'dashboard' && <Dashboard race={live.race} telemetry={live.telemetry} running={live.running} />}
+        {screen === 'strategy' && <Strategy race={live.race} />}
         {screen === 'telemetry' && <Telemetry />}
-        {screen === 'simulation' && <Simulation race={raceState} />}
+        {screen === 'simulation' && <Simulation race={live.race} />}
         {screen === 'documents' && <Documents />}
       </main>
       <footer className="border-t border-pit-line/60 px-6 py-3 text-center text-xs text-pit-muted">

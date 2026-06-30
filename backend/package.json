@@ -9,13 +9,19 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["f1", "ibm-granite", "watsonx", "race-strategy"],
+  "keywords": [
+    "f1",
+    "ibm-granite",
+    "watsonx",
+    "race-strategy"
+  ],
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -21,11 +21,41 @@ const PRESET_Q = [
 
 export function Documents() {
   const [active, setActive] = useState(SAMPLE_DOCS[0].name)
-  const [docText] = useState(SAMPLE_TEXT)
+  const [docText, setDocText] = useState(SAMPLE_TEXT)
   const [question, setQuestion] = useState('What strategy worked at Monaco?')
   const [answer, setAnswer] = useState<DocInsight | null>(null)
   const [busy, setBusy] = useState(false)
+  const [extracting, setExtracting] = useState(false)
+  const [extractInfo, setExtractInfo] = useState<{ method: string; chars: number } | null>(null)
+  const [uploaded, setUploaded] = useState<{ name: string; tag: string }[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleUpload(file: File) {
+    setExtracting(true)
+    setAnswer(null)
+    try {
+      const r = await api.extractDocument(file)
+      setDocText(r.text || `(no text extracted from ${file.name})`)
+      setActive(r.docName)
+      setExtractInfo({ method: r.method, chars: r.chars })
+      setUploaded((u) =>
+        u.some((d) => d.name === r.docName) ? u : [{ name: r.docName, tag: 'Uploaded' }, ...u],
+      )
+    } catch {
+      setActive(file.name)
+      setDocText(SAMPLE_TEXT)
+      setExtractInfo({ method: 'offline', chars: 0 })
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  function selectSample(name: string) {
+    setActive(name)
+    setDocText(SAMPLE_TEXT)
+    setExtractInfo(null)
+    setAnswer(null)
+  }
 
   async function ask(q: string) {
     setQuestion(q)
@@ -61,41 +91,55 @@ export function Documents() {
             onDrop={(e) => {
               e.preventDefault()
               const f = e.dataTransfer.files[0]
-              if (f) setActive(f.name)
+              if (f) handleUpload(f)
             }}
             className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 border-dashed border-pit-line bg-pit-bg/40 px-3 py-6 text-center transition hover:border-pit-cyan/50"
           >
-            <Upload className="h-6 w-6 text-pit-cyan" />
-            <div className="text-xs font-semibold">Upload document</div>
-            <div className="text-[10px] text-pit-muted">PDF · race reports · regs</div>
+            <Upload className={`h-6 w-6 text-pit-cyan ${extracting ? 'animate-bounce' : ''}`} />
+            <div className="text-xs font-semibold">
+              {extracting ? 'Extracting…' : 'Upload document'}
+            </div>
+            <div className="text-[10px] text-pit-muted">PDF · TXT · race reports · regs</div>
             <input
               ref={inputRef}
               type="file"
+              accept=".pdf,.txt,.md,.csv,.docx"
               className="hidden"
-              onChange={(e) => e.target.files?.[0] && setActive(e.target.files[0].name)}
+              onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
             />
           </div>
+          {extractInfo && (
+            <div className="mt-2 flex items-center justify-between rounded-lg border border-pit-green/25 bg-pit-green/5 px-2.5 py-1.5 text-[10px]">
+              <span className="font-semibold text-pit-green">
+                extracted via {extractInfo.method}
+              </span>
+              <span className="mono text-pit-muted">{extractInfo.chars.toLocaleString()} chars</span>
+            </div>
+          )}
           <div className="mt-3 space-y-1.5">
-            {SAMPLE_DOCS.map((d) => (
-              <button
-                key={d.name}
-                onClick={() => setActive(d.name)}
-                className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
-                  active === d.name
-                    ? 'border-pit-cyan/40 bg-pit-cyan/10'
-                    : 'border-pit-line bg-pit-panel-2 hover:border-pit-cyan/30'
-                }`}
-              >
-                <FileText className="h-4 w-4 shrink-0 text-pit-cyan" />
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-medium">{d.name}</div>
-                  <div className="text-[10px] text-pit-muted">{d.tag}</div>
-                </div>
-              </button>
-            ))}
+            {[...uploaded, ...SAMPLE_DOCS].map((d) => {
+              const isUploaded = uploaded.some((u) => u.name === d.name)
+              return (
+                <button
+                  key={d.name}
+                  onClick={() => (isUploaded ? setActive(d.name) : selectSample(d.name))}
+                  className={`flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition ${
+                    active === d.name
+                      ? 'border-pit-cyan/40 bg-pit-cyan/10'
+                      : 'border-pit-line bg-pit-panel-2 hover:border-pit-cyan/30'
+                  }`}
+                >
+                  <FileText className="h-4 w-4 shrink-0 text-pit-cyan" />
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-medium">{d.name}</div>
+                    <div className="text-[10px] text-pit-muted">{d.tag}</div>
+                  </div>
+                </button>
+              )
+            })}
           </div>
           <div className="mono mt-3 flex items-center gap-1.5 text-[10px] text-pit-muted">
-            <BookOpen className="h-3 w-3" /> Docling → vector index → retrieval
+            <BookOpen className="h-3 w-3" /> Docling → structured text → Granite retrieval
           </div>
         </Panel>
       </div>

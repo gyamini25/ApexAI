@@ -23,9 +23,17 @@ import {
   sectors,
   raceState,
 } from '../lib/mockData'
-import type { RaceState, Recommendation } from '../lib/types'
+import type { RaceState, Recommendation, TelemetrySample } from '../lib/types'
 
-export function Dashboard({ race }: { race: RaceState }) {
+export function Dashboard({
+  race,
+  telemetry = liveTelemetry,
+  running = false,
+}: {
+  race: RaceState
+  telemetry?: TelemetrySample
+  running?: boolean
+}) {
   const [rec, setRec] = useState<Recommendation | null>(null)
   const [loadingRec, setLoadingRec] = useState(true)
 
@@ -66,7 +74,7 @@ export function Dashboard({ race }: { race: RaceState }) {
 
         {/* Bottom row: live telemetry gauges + AI insight + events */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr_1fr]">
-          <LiveTelemetry />
+          <LiveTelemetry telemetry={telemetry} running={running} />
           <AIInsight />
           <RecentEvents />
         </div>
@@ -258,14 +266,31 @@ function PredictedOutcome() {
   )
 }
 
-function LiveTelemetry() {
+function LiveTelemetry({
+  telemetry,
+  running,
+}: {
+  telemetry: TelemetrySample
+  running: boolean
+}) {
   return (
-    <Panel label="Live Telemetry" right={<GaugeIcon className="h-4 w-4 text-pit-muted" />}>
+    <Panel
+      label="Live Telemetry"
+      right={
+        running ? (
+          <span className="flex items-center gap-1 text-[10px] font-bold text-pit-green">
+            <span className="h-1.5 w-1.5 rounded-full bg-pit-green live-dot" /> STREAMING
+          </span>
+        ) : (
+          <GaugeIcon className="h-4 w-4 text-pit-muted" />
+        )
+      }
+    >
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Gauge value={liveTelemetry.speedKmh} max={360} unit="km/h" label="Speed" color="#ff2d2d" />
-        <Gauge value={liveTelemetry.rpm} max={15000} unit="rpm" label="Engine" color="#ffb020" />
-        <Gauge value={liveTelemetry.throttlePct} max={100} unit="%" label="Throttle" color="#22e07a" />
-        <Gauge value={liveTelemetry.gForce} max={6} unit="G" label="G-Force" color="#a855f7" />
+        <Gauge value={telemetry.speedKmh} max={360} unit="km/h" label="Speed" color="#ff2d2d" />
+        <Gauge value={telemetry.rpm} max={15000} unit="rpm" label="Engine" color="#ffb020" />
+        <Gauge value={telemetry.throttlePct} max={100} unit="%" label="Throttle" color="#22e07a" />
+        <Gauge value={telemetry.gForce} max={6} unit="G" label="G-Force" color="#a855f7" />
       </div>
     </Panel>
   )

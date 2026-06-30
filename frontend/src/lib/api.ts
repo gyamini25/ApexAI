@@ -58,4 +58,14 @@ export const api = {
   ): Promise<{ answer: DocInsight }> {
     return post('/documents/ask', { docName, question, text })
   },
+
+  async extractDocument(
+    file: File,
+  ): Promise<{ docName: string; text: string; method: string; chars: number }> {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch(`${BASE}/documents/extract`, { method: 'POST', body: form })
+    if (!res.ok) throw new Error(`extract ${res.status}`)
+    return res.json()
+  },
 }

@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Mic, Send, Cpu, ChevronRight } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Mic, MicOff, Send, Cpu, ChevronRight, Volume2, VolumeX } from 'lucide-react'
 import type { ChatMessage, RaceState } from '../lib/types'
 import { api } from '../lib/api'
 
@@ -13,6 +13,11 @@ const SUGGESTIONS = [
 let idc = 100
 const nextId = () => `m${idc++}`
 
+// Strip markdown/symbols so the spoken radio sounds natural
+function forSpeech(text: string): string {
+  return text.replace(/[*_`#>•]/g, '').replace(/\s+/g, ' ').trim()
+}
+
 export function EngineerChat({ race }: { race: RaceState }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -25,42 +30,100 @@ export function EngineerChat({ race }: { race: RaceState }) {
   ])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  const [voiceOn, setVoiceOn] = useState(true)
+  const [listening, setListening] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<any>(null)
+
+  const speechSupported =
+    typeof window !== 'undefined' &&
+    (('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window))
+  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, busy])
 
-  async function send(text: string) {
-    const q = text.trim()
-    if (!q || busy) return
-    const userMsg: ChatMessage = {
-      id: nextId(),
-      role: 'engineer',
-      text: q,
-      ts: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  const speak = useCallback(
+    (text: string) => {
+      if (!voiceOn || !ttsSupported) return
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(forSpeech(text))
+      u.rate = 1.08
+      u.pitch = 0.95
+      const voices = window.speechSynthesis.getVoices()
+      const pick =
+        voices.find((v) => /en-GB/i.test(v.lang) && /male|daniel|arthur/i.test(v.name)) ||
+        voices.find((v) => /en-GB/i.test(v.lang)) ||
+        voices.find((v) => /en/i.test(v.lang))
+      if (pick) u.voice = pick
+      window.speechSynthesis.speak(u)
+    },
+    [voiceOn, ttsSupported],
+  )
+
+  const send = useCallback(
+    async (text: string) => {
+      const q = text.trim()
+      if (!q || busy) return
+      const userMsg: ChatMessage = {
+        id: nextId(),
+        role: 'engineer',
+        text: q,
+        ts: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setMessages((m) => [...m, userMsg])
+      setInput('')
+      setBusy(true)
+      try {
+        const { message } = await api.chat(q, race, messages)
+        setMessages((m) => [...m, message])
+        speak(message.text)
+      } catch {
+        setMessages((m) => [
+          ...m,
+          {
+            id: nextId(),
+            role: 'ai',
+            text: 'Radio dropout — backend offline. Start the API server to bring the engineer online.',
+            ts: '',
+            source: 'mock',
+          },
+        ])
+      } finally {
+        setBusy(false)
+      }
+    },
+    [busy, race, messages, speak],
+  )
+
+  const toggleListen = useCallback(() => {
+    if (!speechSupported) {
+      send('Engineer, what is happening right now?')
+      return
     }
-    setMessages((m) => [...m, userMsg])
-    setInput('')
-    setBusy(true)
-    try {
-      const { message } = await api.chat(q, race, messages)
-      setMessages((m) => [...m, message])
-    } catch {
-      setMessages((m) => [
-        ...m,
-        {
-          id: nextId(),
-          role: 'ai',
-          text: 'Radio dropout — backend offline. Start the API server to bring the engineer online.',
-          ts: '',
-          source: 'mock',
-        },
-      ])
-    } finally {
-      setBusy(false)
+    if (listening) {
+      recognitionRef.current?.stop()
+      return
     }
-  }
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+    const rec = new SR()
+    rec.lang = 'en-GB'
+    rec.interimResults = false
+    rec.maxAlternatives = 1
+    rec.onstart = () => setListening(true)
+    rec.onend = () => setListening(false)
+    rec.onerror = () => setListening(false)
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript
+      setInput(transcript)
+      send(transcript)
+    }
+    recognitionRef.current = rec
+    // stop any current speech so the mic doesn't hear the engineer
+    if (ttsSupported) window.speechSynthesis.cancel()
+    rec.start()
+  }, [listening, speechSupported, ttsSupported, send])
 
   return (
     <div className="panel flex h-full flex-col overflow-hidden">
@@ -70,9 +133,22 @@ export function EngineerChat({ race }: { race: RaceState }) {
           <Cpu className="h-4 w-4 text-pit-red" />
           <span className="text-sm font-bold uppercase tracking-wider">AI Race Engineer</span>
         </div>
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-pit-green">
-          <span className="h-2 w-2 rounded-full bg-pit-green live-dot" /> Online
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (voiceOn && ttsSupported) window.speechSynthesis.cancel()
+              setVoiceOn((v) => !v)
+            }}
+            title={voiceOn ? 'Voice replies on' : 'Voice replies off'}
+            className={`flex items-center gap-1 text-[11px] font-semibold ${voiceOn ? 'text-pit-cyan' : 'text-pit-muted'}`}
+          >
+            {voiceOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            Voice
+          </button>
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-pit-green">
+            <span className="h-2 w-2 rounded-full bg-pit-green live-dot" /> Online
+          </span>
+        </div>
       </div>
 
       {/* Voice / equalizer */}
@@ -85,18 +161,24 @@ export function EngineerChat({ race }: { race: RaceState }) {
               style={{
                 height: '100%',
                 animation: `eq ${0.7 + (i % 5) * 0.18}s ease-in-out ${i * 0.04}s infinite`,
+                animationPlayState: listening || busy ? 'running' : 'paused',
+                opacity: listening || busy ? 1 : 0.4,
               }}
             />
           ))}
         </div>
         <button
-          onClick={() => send('Engineer, what is happening right now?')}
-          className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-pit-red to-pit-red-dim glow-red transition hover:scale-105"
-          title="Voice radio (demo: pushes a status request)"
+          onClick={toggleListen}
+          className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br transition hover:scale-105 ${
+            listening ? 'from-pit-cyan to-pit-blue glow-red animate-pulse' : 'from-pit-red to-pit-red-dim glow-red'
+          }`}
+          title={speechSupported ? 'Hold the radio — speak your question' : 'Voice not supported in this browser'}
         >
-          <Mic className="h-5 w-5" />
+          {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>
-        <span className="text-[10px] uppercase tracking-widest text-pit-muted">Tap to radio in</span>
+        <span className="text-[10px] uppercase tracking-widest text-pit-muted">
+          {listening ? 'Listening… speak now' : speechSupported ? 'Tap to radio in' : 'Tap for status'}
+        </span>
       </div>
 
       {/* Conversation */}
