@@ -20,6 +20,39 @@ Competitors: ${(race?.competitors ?? [])
     .join(', ')}`
 }
 
+// Granite sometimes returns fields in the wrong shape (e.g. `why` as a string).
+// Coerce everything to the shape the UI expects so a bad payload can't crash it.
+function asArray(v: any): string[] {
+  if (Array.isArray(v)) return v.map((x) => String(x))
+  if (v == null) return []
+  return String(v)
+    .split(/\n|•|(?<=\.)\s+(?=[A-Z])/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+function normalizeRec(r: any): Recommendation {
+  return {
+    action: String(r?.action ?? 'Hold position'),
+    why: asArray(r?.why),
+    confidencePct: Math.max(0, Math.min(100, Math.round(Number(r?.confidencePct) || 0))),
+    impact: String(r?.impact ?? ''),
+    window: r?.window ? String(r.window) : undefined,
+    severity: ['info', 'advise', 'urgent'].includes(r?.severity) ? r.severity : 'advise',
+    source: 'IBM Granite',
+  }
+}
+
+interface Recommendation {
+  action: string
+  why: string[]
+  confidencePct: number
+  impact: string
+  window?: string
+  severity: 'info' | 'advise' | 'urgent'
+  source: Source
+}
+
 // ── Strategy recommendation ─────────────────────────────────────────────────
 export async function strategy(race: any) {
   if (graniteConfigured) {
@@ -31,7 +64,7 @@ ${ctx(race)}
 Give the single best strategic call right now. Respond ONLY with JSON:
 {"action": string, "why": [string,string,string], "confidencePct": number, "impact": string, "window": string, "severity": "info"|"advise"|"urgent"}`
       const r = await graniteJson<any>(prompt, { maxTokens: 500 })
-      return { recommendation: { ...r, source: 'IBM Granite' as Source } }
+      return { recommendation: normalizeRec(r) }
     } catch (e) {
       console.warn('[granite] strategy fallback:', (e as Error).message)
     }
@@ -68,7 +101,14 @@ Reply on the radio in 2-4 sentences, concrete and numbers-led. Then give up to 3
 Respond ONLY with JSON: {"text": string, "reasoning": [string]}`
       const r = await graniteJson<any>(prompt, { maxTokens: 450, temperature: 0.4 })
       return {
-        message: { id: `g${Date.now()}`, role: 'ai', ts, source: 'IBM Granite' as Source, ...r },
+        message: {
+          id: `g${Date.now()}`,
+          role: 'ai',
+          ts,
+          source: 'IBM Granite' as Source,
+          text: String(r?.text ?? ''),
+          reasoning: asArray(r?.reasoning),
+        },
       }
     } catch (e) {
       console.warn('[granite] chat fallback:', (e as Error).message)

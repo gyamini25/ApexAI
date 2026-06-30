@@ -38,6 +38,8 @@ export function Dashboard({
   const [loadingRec, setLoadingRec] = useState(true)
 
   useEffect(() => {
+    // Fetch once on mount — not on every lap tick during live mode (avoids
+    // spamming Granite and re-rendering the strategy card mid-race).
     let alive = true
     api
       .strategy(race)
@@ -47,7 +49,8 @@ export function Dashboard({
     return () => {
       alive = false
     }
-  }, [race])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_380px]">
@@ -138,7 +141,7 @@ function StrategyRecommendation({
       <div className="my-3 h-px bg-pit-line" />
       <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-pit-muted">Why</div>
       <ul className="space-y-1.5">
-        {r.why.slice(0, 4).map((w, i) => (
+        {(Array.isArray(r.why) ? r.why : [String(r.why)]).slice(0, 4).map((w, i) => (
           <li key={i} className="flex gap-2 text-xs text-pit-text">
             <CircleDot className="mt-0.5 h-3 w-3 shrink-0 text-pit-red" />
             {w}

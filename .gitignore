@@ -22,3 +22,8 @@ npm-debug.log*
 .DS_Store
 .vscode/
 *.swp
+
+# media artifacts (demo video is uploaded to the challenge platform, not git)
+*.mp4
+*.webm
+*.mov

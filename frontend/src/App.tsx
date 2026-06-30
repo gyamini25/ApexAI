@@ -7,6 +7,7 @@ import { Simulation } from './components/Simulation'
 import { Documents } from './components/Documents'
 import { raceState } from './lib/mockData'
 import { useLiveRace } from './lib/useLiveRace'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { api } from './lib/api'
 
 export default function App() {
@@ -29,11 +30,13 @@ export default function App() {
         onToggleLive={live.toggle}
       />
       <main className="mx-auto max-w-[1600px] px-4 py-4">
-        {screen === 'dashboard' && <Dashboard race={live.race} telemetry={live.telemetry} running={live.running} />}
-        {screen === 'strategy' && <Strategy race={live.race} />}
-        {screen === 'telemetry' && <Telemetry />}
-        {screen === 'simulation' && <Simulation race={live.race} />}
-        {screen === 'documents' && <Documents />}
+        <ErrorBoundary>
+          {screen === 'dashboard' && <Dashboard race={live.race} telemetry={live.telemetry} running={live.running} />}
+          {screen === 'strategy' && <Strategy race={live.race} />}
+          {screen === 'telemetry' && <Telemetry />}
+          {screen === 'simulation' && <Simulation race={live.race} />}
+          {screen === 'documents' && <Documents />}
+        </ErrorBoundary>
       </main>
       <footer className="border-t border-pit-line/60 px-6 py-3 text-center text-xs text-pit-muted">
         <span className="text-pit-text">ApexAI</span> — turning millions of racing data points into

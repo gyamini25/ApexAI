@@ -65,7 +65,7 @@ export function Strategy({ race }: { race: RaceState }) {
 
           <Field label="Why">
             <ul className="space-y-2">
-              {rec.why.map((w, i) => (
+              {(Array.isArray(rec.why) ? rec.why : [String(rec.why)]).map((w, i) => (
                 <li key={i} className="flex gap-2 text-sm">
                   <CircleDot className="mt-1 h-3 w-3 shrink-0 text-pit-red" />
                   {w}
