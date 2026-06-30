@@ -10,6 +10,7 @@ import {
   Pause,
 } from 'lucide-react'
 import type { RaceState } from '../lib/types'
+import { Logo } from './Logo'
 
 export type Screen = 'dashboard' | 'strategy' | 'telemetry' | 'simulation' | 'documents'
 
@@ -42,9 +43,7 @@ export function CommandBar({
       <div className="flex items-stretch">
         {/* Brand block */}
         <div className="flex items-center gap-3 border-r border-pit-line px-5 py-3">
-          <div className="relative grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-pit-red to-pit-red-dim glow-red">
-            <span className="text-base font-black italic tracking-tighter">A</span>
-          </div>
+          <Logo size={38} />
           <div className="leading-tight">
             <div className="text-lg font-black italic tracking-tight">
               Apex<span className="text-pit-red">AI</span>
