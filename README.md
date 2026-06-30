@@ -1,5 +1,7 @@
 # 🏎️ ApexAI — Autonomous F1 Race Engineer Copilot
 
+![ApexAI — Autonomous F1 Race Engineer, powered by IBM Granite](ApexAI-banner.png)
+
 > **"An AI teammate, not an AI chatbot."**
 >
 > ApexAI turns millions of racing data points into decisions in seconds. It's the pit-wall

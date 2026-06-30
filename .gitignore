@@ -27,3 +27,6 @@ npm-debug.log*
 *.mp4
 *.webm
 *.mov
+
+# retina banner kept local
+ApexAI-banner@2x.png
