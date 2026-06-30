@@ -1,0 +1,116 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-pit-bg: #07090e;
+  --color-pit-panel: #0c1018;
+  --color-pit-panel-2: #11161f;
+  --color-pit-line: #1c2533;
+  --color-pit-red: #ff2d2d;
+  --color-pit-red-dim: #b91c1c;
+  --color-pit-amber: #ffb020;
+  --color-pit-green: #22e07a;
+  --color-pit-cyan: #28e0d8;
+  --color-pit-blue: #3b82f6;
+  --color-pit-purple: #a855f7;
+  --color-pit-text: #e6ebf2;
+  --color-pit-muted: #8a94a6;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255, 45, 45, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(40, 224, 216, 0.06), transparent 55%),
+    var(--color-pit-bg);
+  color: var(--color-pit-text);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Telemetry-grid backdrop */
+.grid-backdrop {
+  background-image:
+    linear-gradient(to right, rgba(28, 37, 51, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28, 37, 51, 0.35) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(17, 22, 31, 0.9), rgba(12, 16, 24, 0.92));
+  border: 1px solid var(--color-pit-line);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.panel-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-pit-muted);
+}
+
+.glow-red {
+  box-shadow: 0 0 0 1px rgba(255, 45, 45, 0.25), 0 0 30px -6px rgba(255, 45, 45, 0.55);
+}
+
+.scan {
+  position: relative;
+  overflow: hidden;
+}
+.scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.04) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: scan 6s linear infinite;
+}
+@keyframes scan {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.live-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.2); }
+  50% { transform: scaleY(1); }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c2533;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

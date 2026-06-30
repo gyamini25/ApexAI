@@ -1,0 +1,102 @@
+{
+  "name": "ApexAI Race Strategy Flow",
+  "description": "Telemetry → Granite reasoning → explainable strategy decision. Import into LangFlow.",
+  "data": {
+    "nodes": [
+      {
+        "id": "telemetry_input",
+        "type": "DataInput",
+        "position": { "x": 0, "y": 0 },
+        "data": {
+          "label": "Telemetry Input",
+          "description": "Live telemetry + race state (speed, rpm, tyres, weather, competitors)",
+          "outputs": ["raw_state"]
+        }
+      },
+      {
+        "id": "data_cleaner",
+        "type": "Transform",
+        "position": { "x": 260, "y": 0 },
+        "data": {
+          "label": "Data Cleaner",
+          "description": "Normalise channels, parse CSV, detect missing signals",
+          "inputs": ["raw_state"],
+          "outputs": ["clean_state"]
+        }
+      },
+      {
+        "id": "context_builder",
+        "type": "PromptTemplate",
+        "position": { "x": 520, "y": 0 },
+        "data": {
+          "label": "Race Context Builder",
+          "description": "Compress state into the Granite race-context block",
+          "template": "RACE STATE\nEvent: {race} Lap {lap}/{totalLaps}\nPosition: P{position} +{gapToLeader}s\nTyres: {compound} {ageLaps}L FL {conditionPct}% deg {degRatePerLap}%/lap\nWeather: rain {rainProbabilityPct}%\nCompetitors: {competitors}",
+          "inputs": ["clean_state"],
+          "outputs": ["context"]
+        }
+      },
+      {
+        "id": "granite_agent",
+        "type": "WatsonxLLM",
+        "position": { "x": 780, "y": 0 },
+        "data": {
+          "label": "Granite Reasoning Agent",
+          "model_id": "ibm/granite-3-8b-instruct",
+          "decoding_method": "greedy",
+          "temperature": 0.3,
+          "max_new_tokens": 600,
+          "system": "You are ApexAI, an elite F1 race strategist. Justify WHAT, WHY, CONFIDENCE, IMPACT.",
+          "inputs": ["context"],
+          "outputs": ["granite_raw"]
+        }
+      },
+      {
+        "id": "decision_generator",
+        "type": "StructuredOutput",
+        "position": { "x": 1040, "y": -90 },
+        "data": {
+          "label": "Decision Generator",
+          "schema": {
+            "action": "string",
+            "confidencePct": "number",
+            "window": "string",
+            "severity": "info|advise|urgent"
+          },
+          "inputs": ["granite_raw"],
+          "outputs": ["decision"]
+        }
+      },
+      {
+        "id": "explanation_generator",
+        "type": "StructuredOutput",
+        "position": { "x": 1040, "y": 90 },
+        "data": {
+          "label": "Explanation Generator",
+          "schema": { "why": "string[]", "impact": "string" },
+          "inputs": ["granite_raw"],
+          "outputs": ["explanation"]
+        }
+      },
+      {
+        "id": "ui_output",
+        "type": "DataOutput",
+        "position": { "x": 1320, "y": 0 },
+        "data": {
+          "label": "UI Output",
+          "description": "Recommendation card + radio bubble on the dashboard",
+          "inputs": ["decision", "explanation"]
+        }
+      }
+    ],
+    "edges": [
+      { "source": "telemetry_input", "target": "data_cleaner" },
+      { "source": "data_cleaner", "target": "context_builder" },
+      { "source": "context_builder", "target": "granite_agent" },
+      { "source": "granite_agent", "target": "decision_generator" },
+      { "source": "granite_agent", "target": "explanation_generator" },
+      { "source": "decision_generator", "target": "ui_output" },
+      { "source": "explanation_generator", "target": "ui_output" }
+    ]
+  }
+}
